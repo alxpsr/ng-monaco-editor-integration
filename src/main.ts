@@ -8,5 +8,12 @@ if (environment.production) {
   enableProdMode();
 }
 
+(self as any).MonacoEnvironment = {
+  getWorkerUrl: function (moduleId: string, label: string) {
+    return 'vs/base/worker/workerMain.js';
+  },
+}
+
+
 platformBrowserDynamic().bootstrapModule(AppModule)
   .catch(err => console.error(err));

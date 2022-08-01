@@ -1,27 +1,80 @@
-# Editor
+# How to integrate Monaco Editor into Angular project with AMD
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 13.1.2.
+There are 3 main steps (beside editor installation):
+1. Add copy instructions into `assets` sections of `angular.json `
+```json
+{
+    "glob": "**/*",
+    "input": "./node_modules/monaco-editor/min/vs",
+    "output": "/vs"
+}
+```
 
-## Development server
+2. Create component with editor initialization:
+```ts
+class Component implements OnInit, AfterViewInit {
+  @ViewChild("editor") 
+  public editorContent!: ElementRef;
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The app will automatically reload if you change any of the source files.
+  public ngOnInit(): void {
 
-## Code scaffolding
+  }
 
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+  public ngAfterViewInit(): void {
+    const onGotAmdLoader = () => {
+      // Load monaco
+      (window as any).require(["vs/editor/editor.main"], () => {
+        this.initMonaco();
+      });
+    };
 
-## Build
+    // Load AMD loader if necessary
+    if (!(window).require) {
+      const loaderScript = document.createElement("script");
+      loaderScript.type = "text/javascript";
+      loaderScript.src = "vs/loader.js";
+      loaderScript.addEventListener("load", onGotAmdLoader);
+      document.body.appendChild(loaderScript);
+    } else {
+      onGotAmdLoader();
+    }
+  }
 
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory.
+  // Will be called once monaco library is available
+  private initMonaco() {
+    const myDiv: HTMLDivElement = this.editorContent.nativeElement;
+    const editor = monaco.editor.create(myDiv, {
+      value: [
+        "function x() {",
+        "\tconsole.log('Hello world!');",
+        "}"
+      ].join("\n"),
+      language: "javascript",
+      minimap: {
+        enabled: false
+      }
+    });
+  }
+}
+```
 
-## Running unit tests
+3. Maybe most important and unclear step - you have to declare `getWorkerUrl` function (for example in `main.ts`).
+This function will create and run WebWorker for editor so editor will be high efficient in terms of performance. If you skip 
+this step the Editor will throw an error: 
+`Could not create web worker(s). Falling back to loading web worker code in main thread, which might cause UI freezes.`
+and many other weird runtime errors
 
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+```ts
+(self as any).MonacoEnvironment = {
+  getWorkerUrl: function (moduleId: string, label: string) {
+    return 'vs/base/worker/workerMain.js';
+  },
+}
+```
 
-## Running end-to-end tests
+Thanks to `https://ngohungphuc.wordpress.com/2019/01/08/integrate-monaco-editor-with-angular/` for info
 
-Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To use this command, you need to first add a package that implements end-to-end testing capabilities.
-
-## Further help
-
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page.
+## Regarding ESM integration
+I couldn't integrate ESM modules into my app and seems that it's impossible without custom webpack config.
+One more interesting thing that ESM folder (inside of library folder) doesn't have minified files, so i suppose, you have to import 
+these files via webpack (idk how tbh) and webpack will compile and minify them. If i integrate ESM i'll update docs.
