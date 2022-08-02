@@ -78,3 +78,6 @@ Thanks to `https://ngohungphuc.wordpress.com/2019/01/08/integrate-monaco-editor-
 I couldn't integrate ESM modules into my app and seems that it's impossible without custom webpack config.
 One more interesting thing that ESM folder (inside of library folder) doesn't have minified files, so i suppose, you have to import 
 these files via webpack (idk how tbh) and webpack will compile and minify them. If i integrate ESM i'll update docs.
+
+## Useful links
+- https://microsoft.github.io/monaco-editor/playground.html#creating-the-editor-editor-basic-options

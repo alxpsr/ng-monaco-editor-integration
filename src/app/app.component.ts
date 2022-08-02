@@ -36,17 +36,19 @@ export class AppComponent implements OnInit, AfterViewInit {
 
   // Will be called once monaco library is available
   private initMonaco() {
+    const model = monaco.editor.createModel(JSON.stringify(getMock(), null, '\t'), "json");
     const myDiv: HTMLDivElement = this.editorContent.nativeElement;
     const editor = monaco.editor.create(myDiv, {
-      value: [
-        "function x() {",
-        "\tconsole.log('Hello world!');",
-        "}"
-      ].join("\n"),
-      language: "javascript",
+      language: "json",
       minimap: {
         enabled: false
-      }
+      },
+      formatOnPaste: true,
+      model: model
     });
   }
+}
+
+function getMock(): any {
+  return { "glossary": { "title": "example glossary", "GlossDiv": { "title": "S", "GlossList": { "GlossEntry": { "ID": "SGML", "SortAs": "SGML", "GlossTerm": "Standard Generalized Markup Language", "Acronym": "SGML", "Abbrev": "ISO 8879:1986", "GlossDef": { "para": "A meta-markup language, used to create markup languages such as DocBook.", "GlossSeeAlso": ["GML", "XML"] }, "GlossSee": "markup" } } } } };
 }
